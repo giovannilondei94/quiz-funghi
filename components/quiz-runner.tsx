@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { evaluateQuizResult } from "@/lib/quiz-core";
 import type { ExamMode, QuizQuestion } from "@/lib/types";
@@ -25,9 +25,11 @@ export function QuizRunner({
   successWhenIncorrectAnswersLessThan,
 }: QuizRunnerProps) {
   const router = useRouter();
+  const optionsContainerRef = useRef<HTMLDivElement | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [showFinishWarning, setShowFinishWarning] = useState(false);
+  const [canScrollOptions, setCanScrollOptions] = useState(false);
 
   const currentQuestion = questions[currentIndex];
   const selectedAnswer = answers[currentQuestion.id];
@@ -92,6 +94,29 @@ export function QuizRunner({
     setCurrentIndex((value) => value - 1);
   }
 
+  useEffect(() => {
+    const container = optionsContainerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    function updateScrollHint() {
+      const hasOverflow = container.scrollHeight > container.clientHeight + 4;
+      const isAtBottom =
+        container.scrollTop + container.clientHeight >= container.scrollHeight - 4;
+
+      setCanScrollOptions(hasOverflow && !isAtBottom);
+    }
+
+    updateScrollHint();
+    container.addEventListener("scroll", updateScrollHint);
+
+    return () => {
+      container.removeEventListener("scroll", updateScrollHint);
+    };
+  }, [currentIndex, questions]);
+
   return (
     <>
       <main className="mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden px-5 py-5 sm:py-6">
@@ -128,54 +153,65 @@ export function QuizRunner({
             {currentQuestion.question}
           </h1>
 
-          <div className="mt-5 min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
-            {currentQuestion.options.map((option, optionIndex) => {
-              const isSelected = selectedAnswer === optionIndex;
+          <div className="relative mt-5 min-h-0 flex-1">
+            <div
+              ref={optionsContainerRef}
+              className="min-h-0 h-full space-y-3 overflow-y-auto pr-1 pb-12"
+            >
+              {currentQuestion.options.map((option, optionIndex) => {
+                const isSelected = selectedAnswer === optionIndex;
 
-              function selectOption() {
-                handleSelectAnswer(optionIndex);
-              }
+                function selectOption() {
+                  handleSelectAnswer(optionIndex);
+                }
 
-              return (
-                <button
-                  key={`${currentQuestion.id}-${optionIndex}`}
-                  type="button"
-                  onClick={selectOption}
-                  onTouchEnd={selectOption}
-                  className={`flex min-h-[3.6rem] w-full cursor-pointer items-center gap-4 rounded-3xl border px-5 py-3.5 text-left text-base leading-6 transition active:scale-[0.99] select-none ${
-                    isSelected
-                      ? "border-emerald-600 bg-emerald-50 text-slate-950"
-                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-slate-100"
-                  }`}
-                  aria-pressed={isSelected}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition ${
+                return (
+                  <button
+                    key={`${currentQuestion.id}-${optionIndex}`}
+                    type="button"
+                    onClick={selectOption}
+                    onTouchEnd={selectOption}
+                    className={`flex min-h-[3.6rem] w-full cursor-pointer items-center gap-4 rounded-3xl border px-5 py-3.5 text-left text-base leading-6 transition active:scale-[0.99] select-none ${
                       isSelected
-                        ? "border-emerald-600 bg-emerald-600"
-                        : "border-slate-300 bg-white"
+                        ? "border-emerald-600 bg-emerald-50 text-slate-950"
+                        : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-slate-100"
                     }`}
+                    aria-pressed={isSelected}
                   >
                     <span
-                      className={`h-2.5 w-2.5 rounded-full bg-white transition ${
-                        isSelected ? "scale-100 opacity-100" : "scale-0 opacity-0"
+                      aria-hidden="true"
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition ${
+                        isSelected
+                          ? "border-emerald-600 bg-emerald-600"
+                          : "border-slate-300 bg-white"
                       }`}
-                    />
-                  </span>
-                  <span className="font-medium">{option}</span>
-                </button>
-              );
-            })}
+                    >
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full bg-white transition ${
+                          isSelected ? "scale-100 opacity-100" : "scale-0 opacity-0"
+                        }`}
+                      />
+                    </span>
+                    <span className="font-medium">{option}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {canScrollOptions ? (
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-16 items-end justify-center rounded-b-[28px] bg-gradient-to-b from-white/0 via-white/80 to-white pb-2">
+                <span className="text-xl font-semibold text-slate-400">↓</span>
+              </div>
+            ) : null}
           </div>
         </section>
 
-        <div className="mt-5 shrink-0 space-y-3 pt-4">
+        <div className="mt-4 shrink-0 space-y-2.5 pt-3">
           <button
             type="button"
             onClick={handlePreviousQuestion}
             disabled={currentIndex === 0}
-            className="inline-flex min-h-[3.15rem] w-full items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-base font-semibold text-slate-900 transition enabled:hover:border-slate-300 enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            className="inline-flex min-h-[2.5rem] w-full items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-base font-semibold text-slate-900 transition enabled:hover:border-slate-300 enabled:hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
           >
             Domanda precedente
           </button>
@@ -183,7 +219,7 @@ export function QuizRunner({
           <button
             type="button"
             onClick={handleNextQuestion}
-            className="inline-flex min-h-[3.15rem] w-full items-center justify-center rounded-full bg-slate-950 px-6 text-base font-semibold text-white transition hover:bg-slate-800"
+            className="inline-flex min-h-[2.5rem] w-full items-center justify-center rounded-full bg-slate-950 px-6 text-base font-semibold text-white transition hover:bg-slate-800"
           >
             {isLastQuestion
               ? "Termina test"
