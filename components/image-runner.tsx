@@ -71,25 +71,32 @@ export function ImageRunner({
   }, [questions]);
 
   useEffect(() => {
-    const container = optionsContainerRef.current;
+    const containerElement = optionsContainerRef.current;
 
-    if (!container) {
+    if (!containerElement) {
       return;
     }
 
-    function updateScrollHint() {
-      const hasOverflow = container.scrollHeight > container.clientHeight + 4;
+    const element: HTMLDivElement = containerElement;
+
+    function updateScrollHint(element: HTMLDivElement) {
+      const hasOverflow =
+        element.scrollHeight > element.clientHeight + 4;
       const isAtBottom =
-        container.scrollTop + container.clientHeight >= container.scrollHeight - 4;
+        element.scrollTop + element.clientHeight >= element.scrollHeight - 4;
 
       setCanScrollOptions(hasOverflow && !isAtBottom);
     }
 
-    updateScrollHint();
-    container.addEventListener("scroll", updateScrollHint);
+    function handleScroll() {
+      updateScrollHint(element);
+    }
+
+    handleScroll();
+    element.addEventListener("scroll", handleScroll);
 
     return () => {
-      container.removeEventListener("scroll", updateScrollHint);
+      element.removeEventListener("scroll", handleScroll);
     };
   }, [currentIndex, questions]);
 
