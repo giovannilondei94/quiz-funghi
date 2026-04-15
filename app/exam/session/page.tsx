@@ -6,5 +6,12 @@ export default async function ExamSessionPage() {
   const allQuestions = await loadQuizQuestions();
   const questions = buildQuizQuestions(allQuestions);
 
-  return <QuizRunner mode="exam" questions={questions} />;
+  return (
+    <QuizRunner
+      mode="exam"
+      questions={questions}
+      successHref="/exam/images"
+      successWhenIncorrectAnswersLessThan={3}
+    />
+  );
 }

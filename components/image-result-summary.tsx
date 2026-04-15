@@ -14,11 +14,15 @@ import type { ImageQuizResult } from "@/lib/image-types";
 type ImageResultSummaryProps = {
   total: number;
   correct: number;
+  label?: string;
+  retryHref?: string;
 };
 
 export function ImageResultSummary({
   total,
   correct,
+  label = "Riconoscimento immagini",
+  retryHref = "/images/session",
 }: ImageResultSummaryProps) {
   const [wrongAnswers] = useState<ImageQuizResult["wrongAnswers"]>(() => {
     if (typeof window === "undefined") {
@@ -47,7 +51,7 @@ export function ImageResultSummary({
       <div className="flex flex-1 flex-col gap-8">
         <section className="rounded-[32px] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/80">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">
-            Riconoscimento immagini
+            {label}
           </p>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
             {passed ? "Promosso" : "Bocciato"}
@@ -118,7 +122,7 @@ export function ImageResultSummary({
 
         <div className="space-y-3 pb-2">
           <Link
-            href="/images/session"
+            href={retryHref}
             className="inline-flex min-h-14 w-full items-center justify-center rounded-full bg-emerald-600 px-6 text-base font-semibold text-white transition hover:bg-emerald-700"
           >
             Rifai il test

@@ -14,9 +14,17 @@ import type { ImageQuestionWithOptions } from "@/lib/image-types";
 
 type ImageRunnerProps = {
   questions: ImageQuestionWithOptions[];
+  titleLabel?: string;
+  resultHref?: string;
+  successHref?: string;
 };
 
-export function ImageRunner({ questions }: ImageRunnerProps) {
+export function ImageRunner({
+  questions,
+  titleLabel = "Riconoscimento immagini",
+  resultHref = "/images/result",
+  successHref,
+}: ImageRunnerProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -70,7 +78,13 @@ export function ImageRunner({ questions }: ImageRunnerProps) {
     const result = evaluateImageResult(questions, answers);
 
     window.sessionStorage.setItem(IMAGE_RESULT_STORAGE_KEY, JSON.stringify(result));
-    router.push(`/images/result?total=${result.total}&correct=${result.correct}`);
+
+    if (result.passed && successHref) {
+      router.push(successHref);
+      return;
+    }
+
+    router.push(`${resultHref}?total=${result.total}&correct=${result.correct}`);
   }
 
   function handleNextQuestion() {
@@ -101,7 +115,7 @@ export function ImageRunner({ questions }: ImageRunnerProps) {
         <div className="mb-5 flex shrink-0 items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-700">
-              Riconoscimento immagini
+              {titleLabel}
             </p>
             <p className="mt-1 text-sm text-slate-600">
               Immagine {currentIndex + 1} di {questions.length}

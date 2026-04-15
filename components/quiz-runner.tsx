@@ -10,11 +10,20 @@ import type { ExamMode, QuizQuestion } from "@/lib/types";
 type QuizRunnerProps = {
   mode: ExamMode;
   questions: QuizQuestion[];
+  resultHref?: string;
+  successHref?: string;
+  successWhenIncorrectAnswersLessThan?: number;
 };
 
 const LAST_RESULT_STORAGE_KEY = "quiz-funghi:last-result";
 
-export function QuizRunner({ mode, questions }: QuizRunnerProps) {
+export function QuizRunner({
+  mode,
+  questions,
+  resultHref = "/result",
+  successHref,
+  successWhenIncorrectAnswersLessThan,
+}: QuizRunnerProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -37,15 +46,28 @@ export function QuizRunner({ mode, questions }: QuizRunnerProps) {
   function finishTest() {
     const result = evaluateQuizResult(questions, answers, mode);
     window.sessionStorage.setItem(LAST_RESULT_STORAGE_KEY, JSON.stringify(result));
+    const canProceed =
+      successWhenIncorrectAnswersLessThan === undefined
+        ? result.passed
+        : result.incorrectAnswers < successWhenIncorrectAnswersLessThan;
+
+    if (canProceed && successHref) {
+      router.push(successHref);
+      return;
+    }
 
     const params = new URLSearchParams({
       mode: result.mode,
       total: String(result.totalQuestions),
       errors: String(result.incorrectAnswers),
-      maxErrors: String(result.maxErrorsAllowed),
+      maxErrors: String(
+        successWhenIncorrectAnswersLessThan === undefined
+          ? result.maxErrorsAllowed
+          : successWhenIncorrectAnswersLessThan - 1,
+      ),
     });
 
-    router.push(`/result?${params.toString()}`);
+    router.push(`${resultHref}?${params.toString()}`);
   }
 
   function handleNextQuestion() {
