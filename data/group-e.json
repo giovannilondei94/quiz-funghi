@@ -1,0 +1,15 @@
+[
+{"id":"E1","group":"E","question":"Nella Regione Marche i funghi tossici:","options":["non crescono","non hanno mai rappresentato un pericolo per la salute umana","sono comunemente presenti nell’ambiente"],"correctIndex":2},
+{"id":"E2","group":"E","question":"I funghi sono utili al bosco e in che modo:","options":["non sono utili, pertanto si possono distruggere","sono utili ma solo quelli commestibili","sì, sono tutti utili, la loro presenza è indice di un bosco in salute"],"correctIndex":2},
+{"id":"E3","group":"E","question":"Un ecosistema boschivo è:","options":["è l’insieme di esseri viventi e non viventi che popolano un territorio in equilibrio tra loro","è un bosco privato ecologico","è un bosco integrale interdetto all’uomo"],"correctIndex":0},
+{"id":"E4","group":"E","question":"I funghi:","options":["contengono clorofilla","non contengono clorofilla","hanno tutti l’anello"],"correctIndex":1},
+{"id":"E5","group":"E","question":"I funghi appartengono:","options":["al regno vegetale","al regno animale","ad un regno a sé stante"],"correctIndex":2},
+{"id":"E6","group":"E","question":"E’ prevista la vigilanza sul rispetto delle norme della legge regionale 18/2022 :","options":["no non è prevista","si è prevista solo d parte degli enti competenti","si è prevista ed è esercitata dai soggetti di cui all'articolo 11 del d.p.r. 376/1995"],"correctIndex":2},
+{"id":"E7","group":"E","question":"Nella raccolta dei funghi è vietato l'uso di rastrelli:","options":["no è permesso","no è permesso solo nei giardini","si per non danneggiare lo strato umifero del terreno"],"correctIndex":2},
+{"id":"E8","group":"E","question":"La raccolta dei funghi epigei spontanei nelle aree naturali protette del territorio regionale:","options":["è sempre possibile","è disciplinata dai relativi organismi di gestione","è sempre vietata"],"correctIndex":1},
+{"id":"E9","group":"E","question":"La raccolta funghi all'interno delle Aziende faunistico venatorie ed agrituristico venatorie:","options":["è sempre consentita","è consentita nei giorni di silenzio venatorio","no non è consentita"],"correctIndex":1},
+{"id":"E10","group":"E","question":"I funghi:","options":["si autoalimentano come le piante","non sono in grado di costruirsi le sostanze nutritizie","vivono negli ambienti acquatici"],"correctIndex":1},
+{"id":"E11","group":"E","question":"I funghi si riproducono:","options":["per mezzo di semi chiamati “spore”","solo a luna calante","per duplicazione come i batteri"],"correctIndex":0},
+{"id":"E12","group":"E","question":"Cos’è un bosco:","options":["un insieme di alberi","un ecosistema caratterizzato da vegetazione arborea permanente","ovunque si possa tagliare legna dopo essere stati autorizzati"],"correctIndex":1},
+{"id":"E13","group":"E","question":"Che cos’è un prato perenne:","options":["un ecosistema caratterizzato da vegetazione erbacea","un prato molto grande che si sfalcia","un pascolo per bovini"],"correctIndex":0}
+]
