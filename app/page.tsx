@@ -33,9 +33,15 @@ export default function Home() {
           </Link>
           <Link
             href="/quiz"
-            className="inline-flex min-h-16 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-base font-semibold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50"
+            className="inline-flex min-h-16 w-full items-center justify-center rounded-full bg-amber-500 px-6 text-base font-semibold text-slate-950 transition hover:bg-amber-400"
           >
             Quiz
+          </Link>
+          <Link
+            href="/images"
+            className="inline-flex min-h-16 w-full items-center justify-center rounded-full bg-sky-600 px-6 text-base font-semibold text-white transition hover:bg-sky-500"
+          >
+            Riconoscimento immagini
           </Link>
         </div>
       </div>

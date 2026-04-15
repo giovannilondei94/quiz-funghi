@@ -5,6 +5,7 @@ type ModeIntroProps = {
   label: string;
   description: string;
   startHref: string;
+  rules?: string[];
 };
 
 export function ModeIntro({
@@ -12,6 +13,12 @@ export function ModeIntro({
   label,
   description,
   startHref,
+  rules = [
+    "30 domande totali",
+    "3 risposte possibili per ogni domanda",
+    "Massimo 3 errori per essere promosso",
+    "Le domande vengono mostrate una alla volta",
+  ],
 }: ModeIntroProps) {
   return (
     <main className="mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden px-5 py-4 sm:py-6">
@@ -39,10 +46,9 @@ export function ModeIntro({
           <section className="rounded-[28px] bg-slate-950 p-5 text-slate-50 sm:p-6">
             <h2 className="text-lg font-semibold">Come funziona</h2>
             <ul className="mt-3 space-y-1.5 text-sm leading-6 text-slate-300 sm:mt-4 sm:space-y-3">
-              <li>30 domande totali</li>
-              <li>3 risposte possibili per ogni domanda</li>
-              <li>Massimo 3 errori per essere promosso</li>
-              <li>Le domande vengono mostrate una alla volta</li>
+              {rules.map((rule) => (
+                <li key={rule}>{rule}</li>
+              ))}
             </ul>
           </section>
         </div>
