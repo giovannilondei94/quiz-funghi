@@ -7,9 +7,15 @@ import type {
 } from "@/lib/types";
 
 export const QUIZ_TOTAL_QUESTIONS = 30;
-export const MIN_QUESTIONS_PER_GROUP = 2;
 export const MAX_ERRORS_ALLOWED = 3;
 export const QUESTION_GROUPS: QuestionGroup[] = ["A", "B", "C", "D", "E"];
+export const MIN_QUESTIONS_BY_GROUP: Record<QuestionGroup, number> = {
+  A: 2,
+  B: 2,
+  C: 2,
+  D: 1,
+  E: 1,
+};
 
 export function shuffleArray<T>(items: T[]): T[] {
   const result = [...items];
@@ -34,19 +40,41 @@ export function pickRandomItems<T>(items: T[], count: number): T[] {
   return shuffleArray(items).slice(0, count);
 }
 
+function normalizeQuestionText(value: string): string {
+  return value
+    .trim()
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/\s+/g, " ");
+}
+
+function getQuestionSignature(question: QuizQuestion): string {
+  return JSON.stringify({
+    question: normalizeQuestionText(question.question),
+    options: question.options.map((option) => normalizeQuestionText(option)),
+    correctIndex: question.correctIndex,
+  });
+}
+
 export function buildQuizQuestions(allQuestions: QuizQuestion[]): QuizQuestion[] {
-  const uniqueQuestions = Array.from(
+  const uniqueQuestionsById = Array.from(
     new Map(allQuestions.map((question) => [question.id, question])).values(),
+  );
+  const uniqueQuestions = Array.from(
+    new Map(
+      uniqueQuestionsById.map((question) => [getQuestionSignature(question), question]),
+    ).values(),
   );
 
   const selectedQuestions = QUESTION_GROUPS.flatMap((group) => {
+    const minQuestionsForGroup = MIN_QUESTIONS_BY_GROUP[group];
     const questionsByGroup = uniqueQuestions.filter((question) => question.group === group);
 
-    if (questionsByGroup.length < MIN_QUESTIONS_PER_GROUP) {
+    if (questionsByGroup.length < minQuestionsForGroup) {
       throw new Error(`Il gruppo ${group} non contiene abbastanza domande.`);
     }
 
-    return pickRandomItems(questionsByGroup, MIN_QUESTIONS_PER_GROUP);
+    return pickRandomItems(questionsByGroup, minQuestionsForGroup);
   });
 
   const selectedIds = new Set(selectedQuestions.map((question) => question.id));
