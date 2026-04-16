@@ -10,6 +10,7 @@ export default function ExamImagesPage() {
   return (
     <ImageRunner
       questions={questions}
+      kind="exam-images"
       titleLabel="Esame completo"
       resultHref="/exam/images/result"
       successHref="/exam/success"

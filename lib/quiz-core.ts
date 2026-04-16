@@ -8,6 +8,7 @@ import type {
 
 export const QUIZ_TOTAL_QUESTIONS = 30;
 export const MAX_ERRORS_ALLOWED = 3;
+export const QUIZ_RESULT_STORAGE_KEY = "quiz-funghi:last-result";
 export const QUESTION_GROUPS: QuestionGroup[] = ["A", "B", "C", "D", "E"];
 export const MIN_QUESTIONS_BY_GROUP: Record<QuestionGroup, number> = {
   A: 2,

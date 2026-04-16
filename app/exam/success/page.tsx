@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SessionLink } from "@/components/session-link";
 
 export default function ExamSuccessPage() {
   return (
@@ -9,23 +9,25 @@ export default function ExamSuccessPage() {
             Esame completo
           </p>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
-            Complimenti Hai Superato L&apos;esame
+            Complimenti hai superato l&apos;esame !!! 
           </h1>
         </section>
 
         <div className="space-y-3 pb-2">
-          <Link
+          <SessionLink
             href="/"
+            clearScope="all"
             className="inline-flex min-h-14 w-full items-center justify-center rounded-full bg-emerald-600 px-6 text-base font-semibold text-white transition hover:bg-emerald-700"
           >
             Torna alla home
-          </Link>
-          <Link
+          </SessionLink>
+          <SessionLink
             href="/exam/session"
+            clearScope="all"
             className="inline-flex min-h-14 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-base font-semibold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50"
           >
             Rifai l&apos;esame
-          </Link>
+          </SessionLink>
         </div>
       </div>
     </main>

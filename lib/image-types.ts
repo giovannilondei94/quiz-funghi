@@ -25,3 +25,14 @@ export type ImageQuizResult = {
   passed: boolean;
   wrongAnswers: ImageWrongAnswerDetail[];
 };
+
+export type ImageSessionKind = "images" | "exam-images";
+
+export type ImageSessionState = {
+  kind: ImageSessionKind;
+  questions: ImageQuestionWithOptions[];
+  currentIndex: number;
+  answers: Record<string, string>;
+  completed: boolean;
+  usedNames: string[];
+};

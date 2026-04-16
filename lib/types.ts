@@ -27,3 +27,11 @@ export type QuizResult = {
   passed: boolean;
   wrongAnswers: WrongAnswerDetail[];
 };
+
+export type QuizSessionState = {
+  mode: ExamMode;
+  questions: QuizQuestion[];
+  currentIndex: number;
+  answers: Record<string, number>;
+  completed: boolean;
+};

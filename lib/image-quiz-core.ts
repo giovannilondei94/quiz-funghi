@@ -72,16 +72,41 @@ export function generateImageOptions(
 export function buildImageQuestions(
   allQuestions: ImageQuestion[],
 ): ImageQuestionWithOptions[] {
+  const usedNames = new Set<string>();
   const selectedQuestions = IMAGE_QUESTION_GROUPS.flatMap((group) => {
     const questionsByGroup = allQuestions.filter((question) => question.group === group);
+    const availableQuestions = questionsByGroup.filter((question) => {
+      const normalizedName = normalizeImageName(question.name);
 
-    if (questionsByGroup.length < IMAGE_QUESTIONS_PER_GROUP) {
+      return normalizedName.length > 0 && !usedNames.has(normalizedName);
+    });
+    const questionsByName = new Map<string, ImageQuestion[]>();
+
+    availableQuestions.forEach((question) => {
+      const normalizedName = normalizeImageName(question.name);
+      const questionsForName = questionsByName.get(normalizedName);
+
+      if (questionsForName) {
+        questionsForName.push(question);
+        return;
+      }
+
+      questionsByName.set(normalizedName, [question]);
+    });
+
+    const distinctNames = shuffleArray(Array.from(questionsByName.keys()));
+
+    if (distinctNames.length < IMAGE_QUESTIONS_PER_GROUP) {
       throw new Error(
-        `Il gruppo ${group} non contiene almeno ${IMAGE_QUESTIONS_PER_GROUP} immagini.`,
+        `Il gruppo ${group} non contiene almeno ${IMAGE_QUESTIONS_PER_GROUP} immagini con nomi distinti.`,
       );
     }
 
-    return pickRandomItems(questionsByGroup, IMAGE_QUESTIONS_PER_GROUP);
+    return distinctNames.slice(0, IMAGE_QUESTIONS_PER_GROUP).map((name) => {
+      usedNames.add(name);
+
+      return pickRandomItems(questionsByName.get(name) ?? [], 1)[0];
+    });
   });
 
   return shuffleArray(selectedQuestions).map((question) => ({

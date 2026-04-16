@@ -7,5 +7,5 @@ export const dynamic = "force-dynamic";
 export default function ImagesSessionPage() {
   const questions = buildImageQuestions(imageQuestions);
 
-  return <ImageRunner questions={questions} />;
+  return <ImageRunner questions={questions} kind="images" />;
 }

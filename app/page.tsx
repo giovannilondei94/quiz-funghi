@@ -1,8 +1,10 @@
-import Link from "next/link";
+import { ClearSessionsOnMount } from "@/components/clear-sessions-on-mount";
+import { SessionLink } from "@/components/session-link";
 
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-5 py-5 sm:py-6">
+      <ClearSessionsOnMount />
       <div className="flex flex-1 flex-col">
         <div className="space-y-5">
           <section className="rounded-[32px] bg-slate-950 px-6 py-8 text-slate-50 shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
@@ -25,24 +27,27 @@ export default function Home() {
         </div>
 
         <div className="mt-5 space-y-3">
-          <Link
+          <SessionLink
             href="/exam"
+            clearScope="all"
             className="inline-flex min-h-16 w-full items-center justify-center rounded-full bg-emerald-600 px-6 text-base font-semibold text-white transition hover:bg-emerald-700"
           >
             Esame completo
-          </Link>
-          <Link
+          </SessionLink>
+          <SessionLink
             href="/quiz"
+            clearScope="all"
             className="inline-flex min-h-16 w-full items-center justify-center rounded-full bg-amber-500 px-6 text-base font-semibold text-slate-950 transition hover:bg-amber-400"
           >
             Quiz
-          </Link>
-          <Link
+          </SessionLink>
+          <SessionLink
             href="/images"
+            clearScope="all"
             className="inline-flex min-h-16 w-full items-center justify-center rounded-full bg-sky-600 px-6 text-base font-semibold text-white transition hover:bg-sky-500"
           >
             Riconoscimento immagini
-          </Link>
+          </SessionLink>
         </div>
       </div>
     </main>

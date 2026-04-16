@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
+import { SessionLink } from "@/components/session-link";
+import { QUIZ_RESULT_STORAGE_KEY } from "@/lib/quiz-core";
 import type { ExamMode, QuizResult } from "@/lib/types";
-
-const LAST_RESULT_STORAGE_KEY = "quiz-funghi:last-result";
 
 type ResultSummaryProps = {
   mode: ExamMode;
@@ -29,7 +28,7 @@ export function ResultSummary({
       return [];
     }
 
-    const rawResult = window.sessionStorage.getItem(LAST_RESULT_STORAGE_KEY);
+    const rawResult = window.sessionStorage.getItem(QUIZ_RESULT_STORAGE_KEY);
 
     if (!rawResult) {
       return [];
@@ -40,7 +39,7 @@ export function ResultSummary({
 
       return parsedResult.mode === mode ? parsedResult.wrongAnswers ?? [] : [];
     } catch {
-      window.sessionStorage.removeItem(LAST_RESULT_STORAGE_KEY);
+      window.sessionStorage.removeItem(QUIZ_RESULT_STORAGE_KEY);
       return [];
     }
   });
@@ -112,18 +111,20 @@ export function ResultSummary({
         ) : null}
 
         <div className="space-y-3 pb-2">
-          <Link
+          <SessionLink
             href={retryHref}
+            clearScope="all"
             className="inline-flex min-h-14 w-full items-center justify-center rounded-full bg-emerald-600 px-6 text-base font-semibold text-white transition hover:bg-emerald-700"
           >
             Rifai il test
-          </Link>
-          <Link
+          </SessionLink>
+          <SessionLink
             href="/"
+            clearScope="all"
             className="inline-flex min-h-14 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-base font-semibold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50"
           >
             Torna alla home
-          </Link>
+          </SessionLink>
         </div>
       </div>
     </main>

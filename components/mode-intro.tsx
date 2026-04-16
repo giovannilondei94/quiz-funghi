@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SessionLink } from "@/components/session-link";
 
 type ModeIntroProps = {
   title: string;
@@ -24,12 +24,13 @@ export function ModeIntro({
     <main className="mx-auto flex h-[100dvh] w-full max-w-md flex-col overflow-hidden px-5 py-4 sm:py-6">
       <div className="flex flex-1 flex-col">
         <div className="space-y-4">
-          <Link
+          <SessionLink
             href="/"
+            clearScope="all"
             className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
           >
             Torna alla home
-          </Link>
+          </SessionLink>
 
           <section className="rounded-[28px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/80 sm:p-6">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-emerald-700">
@@ -53,12 +54,13 @@ export function ModeIntro({
           </section>
         </div>
 
-        <Link
+        <SessionLink
           href={startHref}
+          clearScope="all"
           className="mt-4 inline-flex min-h-14 items-center justify-center rounded-full bg-emerald-600 px-6 text-base font-semibold text-white transition hover:bg-emerald-700"
         >
           Inizia
-        </Link>
+        </SessionLink>
       </div>
     </main>
   );

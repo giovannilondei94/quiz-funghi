@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { evaluateQuizResult } from "@/lib/quiz-core";
-import type { ExamMode, QuizQuestion } from "@/lib/types";
+import { SessionLink } from "@/components/session-link";
+import { evaluateQuizResult, QUIZ_RESULT_STORAGE_KEY } from "@/lib/quiz-core";
+import { clearQuizSession, loadQuizSession, saveQuizSession } from "@/lib/session-storage";
+import type { ExamMode, QuizQuestion, QuizSessionState } from "@/lib/types";
 
 type QuizRunnerProps = {
   mode: ExamMode;
@@ -14,8 +15,6 @@ type QuizRunnerProps = {
   successHref?: string;
   successWhenIncorrectAnswersLessThan?: number;
 };
-
-const LAST_RESULT_STORAGE_KEY = "quiz-funghi:last-result";
 
 export function QuizRunner({
   mode,
@@ -26,73 +25,54 @@ export function QuizRunner({
 }: QuizRunnerProps) {
   const router = useRouter();
   const optionsContainerRef = useRef<HTMLDivElement | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [sessionState, setSessionState] = useState<QuizSessionState>({
+    mode,
+    questions,
+    currentIndex: 0,
+    answers: {},
+    completed: false,
+  });
+  const [isSessionReady, setIsSessionReady] = useState(false);
   const [showFinishWarning, setShowFinishWarning] = useState(false);
   const [canScrollOptions, setCanScrollOptions] = useState(false);
 
-  const currentQuestion = questions[currentIndex];
-  const selectedAnswer = answers[currentQuestion.id];
-  const isLastQuestion = currentIndex === questions.length - 1;
-  const unansweredQuestionsCount = questions.reduce((count, question) => {
+  const { questions: activeQuestions, currentIndex, answers } = sessionState;
+  const currentQuestion = activeQuestions[currentIndex];
+  const selectedAnswer = currentQuestion ? answers[currentQuestion.id] : undefined;
+  const isLastQuestion = currentIndex === activeQuestions.length - 1;
+  const unansweredQuestionsCount = activeQuestions.reduce((count, question) => {
     return answers[question.id] === undefined ? count + 1 : count;
   }, 0);
 
-  function handleSelectAnswer(optionIndex: number) {
-    setAnswers((currentAnswers) => ({
-      ...currentAnswers,
-      [currentQuestion.id]: optionIndex,
-    }));
-  }
+  useEffect(() => {
+    const savedSession = loadQuizSession(mode);
 
-  function finishTest() {
-    const result = evaluateQuizResult(questions, answers, mode);
-    window.sessionStorage.setItem(LAST_RESULT_STORAGE_KEY, JSON.stringify(result));
-    const canProceed =
-      successWhenIncorrectAnswersLessThan === undefined
-        ? result.passed
-        : result.incorrectAnswers < successWhenIncorrectAnswersLessThan;
-
-    if (canProceed && successHref) {
-      router.push(successHref);
+    if (savedSession) {
+      setSessionState(savedSession);
+      setIsSessionReady(true);
       return;
     }
 
-    const params = new URLSearchParams({
-      mode: result.mode,
-      total: String(result.totalQuestions),
-      errors: String(result.incorrectAnswers),
-      maxErrors: String(
-        successWhenIncorrectAnswersLessThan === undefined
-          ? result.maxErrorsAllowed
-          : successWhenIncorrectAnswersLessThan - 1,
-      ),
-    });
+    const nextSessionState: QuizSessionState = {
+      mode,
+      questions,
+      currentIndex: 0,
+      answers: {},
+      completed: false,
+    };
 
-    router.push(`${resultHref}?${params.toString()}`);
-  }
+    setSessionState(nextSessionState);
+    saveQuizSession(nextSessionState);
+    setIsSessionReady(true);
+  }, [mode, questions]);
 
-  function handleNextQuestion() {
-    if (!isLastQuestion) {
-      setCurrentIndex((value) => value + 1);
+  useEffect(() => {
+    if (!isSessionReady) {
       return;
     }
 
-    if (unansweredQuestionsCount > 0) {
-      setShowFinishWarning(true);
-      return;
-    }
-
-    finishTest();
-  }
-
-  function handlePreviousQuestion() {
-    if (currentIndex === 0) {
-      return;
-    }
-
-    setCurrentIndex((value) => value - 1);
-  }
+    saveQuizSession(sessionState);
+  }, [isSessionReady, sessionState]);
 
   useEffect(() => {
     const containerElement = optionsContainerRef.current;
@@ -122,7 +102,87 @@ export function QuizRunner({
     return () => {
       element.removeEventListener("scroll", handleScroll);
     };
-  }, [currentIndex, questions]);
+  }, [activeQuestions, currentIndex]);
+
+  function handleSelectAnswer(optionIndex: number) {
+    if (!currentQuestion) {
+      return;
+    }
+
+    setSessionState((currentSessionState) => ({
+      ...currentSessionState,
+      answers: {
+        ...currentSessionState.answers,
+        [currentQuestion.id]: optionIndex,
+      },
+    }));
+  }
+
+  function finishTest() {
+    const result = evaluateQuizResult(activeQuestions, answers, mode);
+
+    window.sessionStorage.setItem(QUIZ_RESULT_STORAGE_KEY, JSON.stringify(result));
+    saveQuizSession({
+      ...sessionState,
+      completed: true,
+    });
+    clearQuizSession();
+
+    const canProceed =
+      successWhenIncorrectAnswersLessThan === undefined
+        ? result.passed
+        : result.incorrectAnswers < successWhenIncorrectAnswersLessThan;
+
+    if (canProceed && successHref) {
+      router.push(successHref);
+      return;
+    }
+
+    const params = new URLSearchParams({
+      mode: result.mode,
+      total: String(result.totalQuestions),
+      errors: String(result.incorrectAnswers),
+      maxErrors: String(
+        successWhenIncorrectAnswersLessThan === undefined
+          ? result.maxErrorsAllowed
+          : successWhenIncorrectAnswersLessThan - 1,
+      ),
+    });
+
+    router.push(`${resultHref}?${params.toString()}`);
+  }
+
+  function handleNextQuestion() {
+    if (!isLastQuestion) {
+      setSessionState((currentSessionState) => ({
+        ...currentSessionState,
+        currentIndex: currentSessionState.currentIndex + 1,
+      }));
+      return;
+    }
+
+    if (unansweredQuestionsCount > 0) {
+      setShowFinishWarning(true);
+      return;
+    }
+
+    finishTest();
+  }
+
+  function handlePreviousQuestion() {
+    if (currentIndex === 0) {
+      return;
+    }
+
+    setSessionState((currentSessionState) => ({
+      ...currentSessionState,
+      currentIndex: currentSessionState.currentIndex - 1,
+    }));
+  }
+
+  if (!isSessionReady || !currentQuestion) {
+    return null;
+  }
 
   return (
     <>
@@ -133,22 +193,23 @@ export function QuizRunner({
               {mode === "exam" ? "Esame completo" : "Quiz"}
             </p>
             <p className="mt-1 text-sm text-slate-600">
-              Domanda {currentIndex + 1} di {questions.length}
+              Domanda {currentIndex + 1} di {activeQuestions.length}
             </p>
           </div>
 
-          <Link
+          <SessionLink
             href="/"
+            clearScope="all"
             className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
           >
             Esci
-          </Link>
+          </SessionLink>
         </div>
 
         <div className="h-2 shrink-0 overflow-hidden rounded-full bg-slate-200">
           <div
             className="h-full rounded-full bg-emerald-600 transition-all"
-            style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+            style={{ width: `${((currentIndex + 1) / activeQuestions.length) * 100}%` }}
           />
         </div>
 

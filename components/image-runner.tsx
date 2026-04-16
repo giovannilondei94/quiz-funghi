@@ -1,19 +1,30 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { SessionLink } from "@/components/session-link";
 import {
   evaluateImageResult,
   formatImageOptionLabel,
   IMAGE_RESULT_STORAGE_KEY,
+  normalizeImageName,
 } from "@/lib/image-quiz-core";
-import type { ImageQuestionWithOptions } from "@/lib/image-types";
+import {
+  clearImageSession,
+  loadImageSession,
+  saveImageSession,
+} from "@/lib/session-storage";
+import type {
+  ImageQuestionWithOptions,
+  ImageSessionKind,
+  ImageSessionState,
+} from "@/lib/image-types";
 
 type ImageRunnerProps = {
   questions: ImageQuestionWithOptions[];
+  kind?: ImageSessionKind;
   titleLabel?: string;
   resultHref?: string;
   successHref?: string;
@@ -21,31 +32,71 @@ type ImageRunnerProps = {
 
 export function ImageRunner({
   questions,
+  kind = "images",
   titleLabel = "Riconoscimento immagini",
   resultHref = "/images/result",
   successHref,
 }: ImageRunnerProps) {
   const router = useRouter();
   const optionsContainerRef = useRef<HTMLDivElement | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [sessionState, setSessionState] = useState<ImageSessionState>({
+    kind,
+    questions,
+    currentIndex: 0,
+    answers: {},
+    completed: false,
+    usedNames: questions.map((question) => normalizeImageName(question.name)),
+  });
+  const [isSessionReady, setIsSessionReady] = useState(false);
   const [showFinishWarning, setShowFinishWarning] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [canScrollOptions, setCanScrollOptions] = useState(false);
 
-  const currentQuestion = questions[currentIndex];
-  const selectedAnswer = answers[currentQuestion.id];
-  const isLastQuestion = currentIndex === questions.length - 1;
-  const isCurrentImageLoaded = loadedImages[currentQuestion.id] === true;
-  const unansweredQuestionsCount = questions.reduce((count, question) => {
+  const { questions: activeQuestions, currentIndex, answers } = sessionState;
+  const currentQuestion = activeQuestions[currentIndex];
+  const selectedAnswer = currentQuestion ? answers[currentQuestion.id] : undefined;
+  const isLastQuestion = currentIndex === activeQuestions.length - 1;
+  const isCurrentImageLoaded = currentQuestion ? loadedImages[currentQuestion.id] === true : false;
+  const unansweredQuestionsCount = activeQuestions.reduce((count, question) => {
     return answers[question.id] === undefined ? count + 1 : count;
   }, 0);
 
   useEffect(() => {
+    const savedSession = loadImageSession(kind);
+
+    if (savedSession) {
+      setSessionState(savedSession);
+      setIsSessionReady(true);
+      return;
+    }
+
+    const nextSessionState: ImageSessionState = {
+      kind,
+      questions,
+      currentIndex: 0,
+      answers: {},
+      completed: false,
+      usedNames: questions.map((question) => normalizeImageName(question.name)),
+    };
+
+    setSessionState(nextSessionState);
+    saveImageSession(nextSessionState);
+    setIsSessionReady(true);
+  }, [kind, questions]);
+
+  useEffect(() => {
+    if (!isSessionReady) {
+      return;
+    }
+
+    saveImageSession(sessionState);
+  }, [isSessionReady, sessionState]);
+
+  useEffect(() => {
     const preloadedImageIds = new Set<string>();
 
-    questions.forEach((question) => {
+    activeQuestions.forEach((question) => {
       const image = new window.Image();
 
       image.onload = () => {
@@ -68,7 +119,7 @@ export function ImageRunner({
 
       image.src = question.image;
     });
-  }, [questions]);
+  }, [activeQuestions]);
 
   useEffect(() => {
     const containerElement = optionsContainerRef.current;
@@ -98,19 +149,31 @@ export function ImageRunner({
     return () => {
       element.removeEventListener("scroll", handleScroll);
     };
-  }, [currentIndex, questions]);
+  }, [activeQuestions, currentIndex]);
 
   function handleSelectAnswer(option: string) {
-    setAnswers((currentAnswers) => ({
-      ...currentAnswers,
-      [currentQuestion.id]: option,
+    if (!currentQuestion) {
+      return;
+    }
+
+    setSessionState((currentSessionState) => ({
+      ...currentSessionState,
+      answers: {
+        ...currentSessionState.answers,
+        [currentQuestion.id]: option,
+      },
     }));
   }
 
   function finishTest() {
-    const result = evaluateImageResult(questions, answers);
+    const result = evaluateImageResult(activeQuestions, answers);
 
     window.sessionStorage.setItem(IMAGE_RESULT_STORAGE_KEY, JSON.stringify(result));
+    saveImageSession({
+      ...sessionState,
+      completed: true,
+    });
+    clearImageSession();
 
     if (result.passed && successHref) {
       router.push(successHref);
@@ -122,7 +185,10 @@ export function ImageRunner({
 
   function handleNextQuestion() {
     if (!isLastQuestion) {
-      setCurrentIndex((value) => value + 1);
+      setSessionState((currentSessionState) => ({
+        ...currentSessionState,
+        currentIndex: currentSessionState.currentIndex + 1,
+      }));
       return;
     }
 
@@ -139,7 +205,14 @@ export function ImageRunner({
       return;
     }
 
-    setCurrentIndex((value) => value - 1);
+    setSessionState((currentSessionState) => ({
+      ...currentSessionState,
+      currentIndex: currentSessionState.currentIndex - 1,
+    }));
+  }
+
+  if (!isSessionReady || !currentQuestion) {
+    return null;
   }
 
   return (
@@ -151,22 +224,23 @@ export function ImageRunner({
               {titleLabel}
             </p>
             <p className="mt-1 text-sm text-slate-600">
-              Immagine {currentIndex + 1} di {questions.length}
+              Immagine {currentIndex + 1} di {activeQuestions.length}
             </p>
           </div>
 
-          <Link
+          <SessionLink
             href="/"
+            clearScope="all"
             className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
           >
             Esci
-          </Link>
+          </SessionLink>
         </div>
 
         <div className="h-2 shrink-0 overflow-hidden rounded-full bg-slate-200">
           <div
             className="h-full rounded-full bg-emerald-600 transition-all"
-            style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+            style={{ width: `${((currentIndex + 1) / activeQuestions.length) * 100}%` }}
           />
         </div>
 

@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 
+import { SessionLink } from "@/components/session-link";
 import {
   formatImageOptionLabel,
   IMAGE_PASS_THRESHOLD,
@@ -121,18 +121,20 @@ export function ImageResultSummary({
         ) : null}
 
         <div className="space-y-3 pb-2">
-          <Link
+          <SessionLink
             href={retryHref}
+            clearScope="all"
             className="inline-flex min-h-14 w-full items-center justify-center rounded-full bg-emerald-600 px-6 text-base font-semibold text-white transition hover:bg-emerald-700"
           >
             Rifai il test
-          </Link>
-          <Link
+          </SessionLink>
+          <SessionLink
             href="/"
+            clearScope="all"
             className="inline-flex min-h-14 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-6 text-base font-semibold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50"
           >
             Torna alla home
-          </Link>
+          </SessionLink>
         </div>
       </div>
     </main>
