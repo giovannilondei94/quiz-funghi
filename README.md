@@ -1,6 +1,7 @@
 # Quiz Funghi
 
-Applicazione web mobile-first sviluppata con Next.js per allenarsi all'esame del tesserino funghi. Il progetto simula sia la prova teorica a risposta multipla sia la prova di riconoscimento visivo, con un flusso pensato per riprodurre una sessione d'esame semplice, rapida e fruibile da smartphone.
+Applicazione web mobile-first sviluppata con Next.js per allenarsi all'esame per ottenimento tesserino per la raccolta dei funghi epigei spontanei nella regione Marche . 
+Il progetto simula sia la prova teorica a risposta multipla sia la prova di riconoscimento visivo, con un flusso pensato per riprodurre una sessione d'esame semplice, rapida e fruibile da smartphone.
 
 ## Panoramica
 
